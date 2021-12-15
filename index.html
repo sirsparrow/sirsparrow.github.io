@@ -43,6 +43,9 @@
         channels: [params.channel || params.c],
       });
 
+	  let bttvEmotesFetched = false;
+      let bttvEmotes = [];
+	  
       client.connect();
 
       client.on("message", (channel, tags, message, self) => {
@@ -60,12 +63,28 @@
               /{color}/g,
               resolveColor(channel, tags["username"], tags["color"])
             )
-            .replace(/{message}/g, getMessageHTML(message, tags))
+            .replace(/{message}/g, getMessageHtml(message, tags))
         );
       });
 
+      const updateBttvEmotes = async (channelId) => {
+        fetch(`https://api.betterttv.net/3/cached/users/twitch/${channelId}`)
+          .then((data) => data.json())
+          .then((payload) => [
+            ...(payload?.channelEmotes || []),
+            ...(payload?.sharedEmotes || []),
+          ])
+          .then((emotes) => (bttvEmotes = [...emotes]));
+      };
+
+      const getMessageHtml = (message, { emotes }) => {
+        let html = inlineTwitchEmotes(message, { emotes });
+        html = inlineBttvEmotes(html);
+        return html;
+      };
+
       // taken from https://www.stefanjudis.com/blog/how-to-display-twitch-emotes-in-tmi-js-chat-messages/
-      function getMessageHTML(message, { emotes }) {
+      const inlineTwitchEmotes = (message, { emotes }) => {
         if (!emotes) return $("<div>").text(message).html();
 
         // store all emote keywords
@@ -85,7 +104,7 @@
 
           stringReplacements.push({
             stringToReplace: stringToReplace,
-            replacement: `<span class="emote"><img src="https://static-cdn.jtvnw.net/emoticons/v1/${id}/3.0"></span>`,
+            replacement: `<span class="emote"><img src="https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/3.0"></span>`,
           });
         });
 
@@ -99,7 +118,20 @@
         );
 
         return messageHTML;
-      }
+      };
+
+      const inlineBttvEmotes = (html) => {
+        if (bttvEmotes.length === 0) return html;
+
+        let pieces = html.split(" ");
+        let translatedPieces = pieces.map((piece) => {
+          var emoteId = bttvEmotes.find((emote) => emote.code === piece)?.id;
+          if (!emoteId) return piece;
+          return `<span class="emote"><img src="https://cdn.betterttv.net/emote/${emoteId}/3x"></span>`;
+        });
+
+        return translatedPieces.join(" ");
+      };
 
       // taken from https://github.com/tmijs/tmi.js/issues/160
       let defaultColors = [
