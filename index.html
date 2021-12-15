@@ -49,11 +49,11 @@
       client.connect();
 
       client.on("message", (channel, tags, message, self) => {
-        console.log(tags);
-        console.log(message);
-
-        var emotes = tags["emotes"];
-
+        if (!bttvEmotesFetched) {
+          updateBttvEmotes(tags["room-id"]);
+          bttvEmotesFetched = true;
+        }
+		
         document.getElementById("log").insertAdjacentHTML(
           "beforeend",
           template
