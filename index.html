@@ -71,8 +71,8 @@
         fetch(`https://api.betterttv.net/3/cached/users/twitch/${channelId}`)
           .then((data) => data.json())
           .then((payload) => [
-            ...(payload?.channelEmotes || []),
-            ...(payload?.sharedEmotes || []),
+            ...((payload && payload.channelEmotes) || []),
+            ...((payload && payload.sharedEmotes) || []),
           ])
           .then((emotes) => (bttvEmotes = [...emotes]));
       };
@@ -125,7 +125,9 @@
 
         let pieces = html.split(" ");
         let translatedPieces = pieces.map((piece) => {
-          var emoteId = bttvEmotes.find((emote) => emote.code === piece)?.id;
+          var emote = bttvEmotes.find((emote) => emote.code === piece);
+          if (!emote) return piece;
+          var emoteId = emote.id;
           if (!emoteId) return piece;
           return `<span class="emote"><img src="https://cdn.betterttv.net/emote/${emoteId}/3x"></span>`;
         });
