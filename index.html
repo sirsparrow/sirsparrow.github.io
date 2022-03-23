@@ -37,23 +37,24 @@
     <script>
       const template = document.getElementById("chatlist_item").innerHTML;
 
+	  const urlSearchParams = new URLSearchParams(window.location.search);
+	  const params = Object.fromEntries(urlSearchParams.entries());
+
       const client = new tmi.Client({
-        channels: ["sir__sparrow"],
+        channels: [params.channel || params.c],
       });
 
-      let bttvEmotesFetched = false;
+	  let bttvEmotesFetched = false;
       let bttvEmotes = [];
+	  
+      client.connect();
 
-      client.connect().catch(console.error);
-
-      client.on("message", function onMessage(channel, tags, message, self) {
+      client.on("message", (channel, tags, message, self) => {
         if (!bttvEmotesFetched) {
           updateBttvEmotes(tags["room-id"]);
           bttvEmotesFetched = true;
         }
-
-        var emotes = tags["emotes"];
-
+		
         document.getElementById("log").insertAdjacentHTML(
           "beforeend",
           template
@@ -67,7 +68,7 @@
         );
       });
 
-      function updateBttvEmotes(channelId) {
+      const updateBttvEmotes = async (channelId) => {
         fetch(`https://api.betterttv.net/3/cached/users/twitch/${channelId}`)
           .then((data) => data.json())
           .then((payload) => [
@@ -75,7 +76,7 @@
             ...((payload && payload.sharedEmotes) || []),
           ])
           .then((emotes) => (bttvEmotes = [...emotes]));
-      }
+      };
 
       const getMessageHtml = (message, { emotes }) => {
         let html = inlineTwitchEmotes(message, { emotes });
@@ -84,7 +85,7 @@
       };
 
       // taken from https://www.stefanjudis.com/blog/how-to-display-twitch-emotes-in-tmi-js-chat-messages/
-      function inlineTwitchEmotes(message, { emotes }) {
+      const inlineTwitchEmotes = (message, { emotes }) => {
         if (!emotes) return $("<div>").text(message).html();
 
         // store all emote keywords
@@ -118,9 +119,9 @@
         );
 
         return messageHTML;
-      }
+      };
 
-      function inlineBttvEmotes(html) {
+      const inlineBttvEmotes = (html) => {
         if (bttvEmotes.length === 0) return html;
 
         let pieces = html.split(" ");
@@ -133,7 +134,7 @@
         });
 
         return translatedPieces.join(" ");
-      }
+      };
 
       // taken from https://github.com/tmijs/tmi.js/issues/160
       let defaultColors = [
