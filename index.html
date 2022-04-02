@@ -22,6 +22,7 @@
         <div class="wrapper">
           <img class="avatar" />
           <span class="name" style="color: {color};">{from}</span>
+          <span class="pronouns"></span>
           <span class="colon"></span>
           <span class="message">
             <span class="original">{message}</span>
@@ -37,16 +38,16 @@
     <script>
       const template = document.getElementById("chatlist_item").innerHTML;
 
-	  const urlSearchParams = new URLSearchParams(window.location.search);
-	  const params = Object.fromEntries(urlSearchParams.entries());
+      const urlSearchParams = new URLSearchParams(window.location.search);
+      const params = Object.fromEntries(urlSearchParams.entries());
 
       const client = new tmi.Client({
         channels: [params.channel || params.c],
       });
 
-	  let bttvEmotesFetched = false;
+      let bttvEmotesFetched = false;
       let bttvEmotes = [];
-	  
+
       client.connect();
 
       client.on("message", (channel, tags, message, self) => {
@@ -54,7 +55,7 @@
           updateBttvEmotes(tags["room-id"]);
           bttvEmotesFetched = true;
         }
-		
+
         document.getElementById("log").insertAdjacentHTML(
           "beforeend",
           template
