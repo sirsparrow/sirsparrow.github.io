@@ -179,3 +179,15 @@ body {
   border-radius: 21px;
   margin-bottom: -13px;
 }
+
+.pronouns {
+  padding: 2px;
+  font-weight: bold;
+  border-radius: 5px;
+  border: 2px solid white;
+  box-shadow: 0px 0px 5px black;
+}
+
+.pronouns:empty {
+  display: none;
+}
