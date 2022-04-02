@@ -1,8 +1,11 @@
+let pronouns = null;
+
 const setup = () => {
   const chatlog = document.querySelector("#log");
   const config = { childList: true };
   const observer = new MutationObserver(onMutation);
   observer.observe(chatlog, config);
+  loadPronouns();
 };
 
 const onMutation = (mutationsList) => {
@@ -23,9 +26,30 @@ const onMutation = (mutationsList) => {
   }
 };
 
+function loadPronouns() {
+  fetch("https://pronouns.alejo.io/api/pronouns")
+    .then((resp) => resp.json())
+    .then((resp) => (pronouns = resp));
+}
+
+function addPronouns(id) {
+  if (pronouns == null) return;
+
+  let container = document.getElementById(id);
+  let username = container.getElementsByClassName("name")[0];
+  let pronounsContainer = container.getElementsByClassName("pronouns")[0];
+
+  fetch(`https://pronouns.alejo.io/api/users/${username.innerText}`)
+    .then((resp) => resp.json())
+    .then((resp) => resp[0].pronoun_id)
+    .then((pid) => pronouns.find((p) => p.name === pid).display)
+    .then((display) => (pronounsContainer.innerText = display));
+}
+
 function onNewDivAdded(id) {
   setAvatar(id);
   typewriter(id);
+  addPronouns(id);
 }
 
 function setAvatar(id) {
